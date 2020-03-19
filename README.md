@@ -13,9 +13,10 @@ Install the plugin into your server from the [NFive Hub](https://hub.nfive.io/Ad
 ```
 nfpm install Addemod/markers
 ```
+To correctly add this plugin as a dependency to your project, run the install command at the root folder of your project.
 
 ## Usage
-
+### Server
 ```csharp
 private MarkersManager markerManager;
 
@@ -25,7 +26,15 @@ public MyPluginController(ILogger logger, Configuration configuration, ICommunic
 
 	// Send configuration when requested
 	comms.Event(MyPluginEvents.Configuration).FromClients().OnRequest(e => e.Reply(this.Configuration));
-	}
+}
+```
+### Client
+```csharp
+private MarkersService markersServicer;
+
+public MyPluginService(ILogger logger, ITickManager ticks, ICommunicationManager comms, ICommandManager commands, IOverlayManager overlay, User user, MarkersService markersService): base(logger, ticks, comms, commands, overlay, user)
+{
+	this.markersService = markersService;
 }
 ```
 

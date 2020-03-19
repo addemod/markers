@@ -47,7 +47,10 @@ namespace Addemod.Markers.Client
 			Logger.Info("Clicked marker " + marker.Id);
 		}
 
-		private async void Setup() {
+		private async void Setup(bool reload = false) {
+			if(reload)
+				this.Ticks.Off(MarkersTick);
+
 			this.config = await this.Comms.Event(MarkersEvents.Configuration).ToServer().Request<Configuration>();
 			this.markers = await this.Comms.Event(MarkersEvents.GetAllMarkers).ToServer().Request<List<Marker>>();
 			this.insideCurrentMarkers = new List<Marker>();
@@ -62,10 +65,7 @@ namespace Addemod.Markers.Client
 			this.Ticks.On(MarkersTick);
 		}
 
-		private void Reload(ICommunicationMessage e) {
-			this.Ticks.Off(MarkersTick);
-			Setup();
-		}
+		private void Reload(ICommunicationMessage e) => Setup(true);
 
 		private async void AddMarkerCommand(List<string> args) {
 			var pos = API.GetPedBoneCoords(Game.PlayerPed.Handle, (int)Bone.SKEL_L_Foot, 0, 0, -0.1f);

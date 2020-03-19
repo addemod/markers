@@ -28,15 +28,19 @@ namespace Addemod.Markers.Client.Models {
 		public bool IsClickable { get; set; }
 		public InputControl ClickInputControl { get; set; }
 
+		public bool HasPlayerInside { get; set; } = false;
+
 		private Hotkey _hotKey;
 
 		public MarkerType GetMarkerType() {
 			return (MarkerType)this.MarkerType;
 		}
 
-		public Hotkey GetHotkey() {
-			_hotKey = _hotKey ?? new Hotkey(this.ClickInputControl);
-			return _hotKey;
+		public Hotkey Hotkey {
+			get {
+				_hotKey = _hotKey ?? new Hotkey(this.ClickInputControl);
+				return _hotKey;
+			}
 		}
 
 		public Marker() {
@@ -54,6 +58,7 @@ namespace Addemod.Markers.Client.Models {
 			this.TextureDictionary = null;
 			this.TextureName = null;
 			this.IsClickable = true;
+			this.HasPlayerInside = false;
 			this.ClickInputControl = InputControl.PhoneSelect;
 		}
 	}

@@ -37,7 +37,7 @@ Triggered when a player entered a marker
 void MarkerEnteredEvent(ICommunicationMessage e, Marker marker) { /*  Do stuff */ }
 ```
 #### MarkerLeft
-Triggered when a playerr left a marker
+Triggered when a player left a marker
 ```csharp
 void MarkerLeftEvent(ICommunicationMessage e, Marker marker) { /*  Do stuff */ }
 ```

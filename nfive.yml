@@ -1,0 +1,17 @@
+name: Addemod/markers
+version: 1.0.0
+description: A plugin to simplify marker usage
+author: Addemod
+license: LGPL-3.0-or-later
+server:
+  main:
+    - Addemod.Markers.Server
+  include:
+    - Addemod.Markers.Shared
+client:
+  main:
+    - Addemod.Markers.Client
+  include:
+    - Addemod.Markers.Shared
+  files:
+    - Overlays/MarkersOverlay.html

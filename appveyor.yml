@@ -1,0 +1,76 @@
+version: "{build}"
+
+image: Visual Studio 2017
+configuration: Release
+platform: Any CPU
+clone_depth: 1
+
+cache:
+- packages -> **\packages.config
+
+install:
+- ps: >-
+    $name = Select-String -Path nfive.yml -Pattern 'name: ?(.+)$' | %{ $_.Matches[0].Groups[1].Value }
+
+    If ($env:APPVEYOR_REPO_PROVIDER -eq "github" -and $env:APPVEYOR_REPO_NAME -ne $name) {
+      Add-AppveyorMessage -Message "Plugin name mismatch" -Category Error -Details "The GitHub repo name '$env:APPVEYOR_REPO_NAME' does not match the plugin name '$name' from nfive.yml."
+      Write-Host "Plugin name mismatch: The GitHub repo name '$env:APPVEYOR_REPO_NAME' does not match the plugin name '$name' from nfive.yml." -ForegroundColor Red
+      $host.SetShouldExit(1)
+    }
+
+    $env:BUILD_VERSION = Select-String -Path nfive.yml -Pattern 'version: ?(.+)$' | %{ $_.Matches[0].Groups[1].Value }
+
+    If ($env:APPVEYOR_REPO_TAG -eq $true) {
+      $tag = $env:APPVEYOR_REPO_TAG_NAME.TrimStart("v")
+
+      If ($tag -ne $env:BUILD_VERSION) {
+        Add-AppveyorMessage -Message "Plugin version mismatch" -Category Error -Details "The Git tag '$tag' does not match the plugin version number '$env:BUILD_VERSION' from nfive.yml."
+        Write-Host "Plugin version mismatch: The Git tag '$tag' does not match the plugin version number '$env:BUILD_VERSION' from nfive.yml." -ForegroundColor Red
+        $host.SetShouldExit(1)
+      }
+    }
+
+    $env:BUILD_VERSION_FILE = "$env:BUILD_VERSION.$env:APPVEYOR_BUILD_NUMBER"
+
+    $version = $env:BUILD_VERSION -split '-'
+
+    $env:BUILD_VERSION_FRIENDLY = $version[0] -replace "(\.0)$"
+
+    If ($version[1]) {
+      $env:BUILD_VERSION_FILE = "$($version[0]).$env:APPVEYOR_BUILD_NUMBER-$($version[1])"
+
+      $end = (Get-Culture).TextInfo.ToTitleCase($version[1].Replace("rc", "RC"))
+      $env:BUILD_VERSION_FRIENDLY += " " + $end -replace "([a-z]+)(\d+)",'$1 $2'
+    }
+
+    Update-AppveyorBuild -Version $env:BUILD_VERSION_FILE
+- appveyor DownloadFile https://dl.nfive.io/nfpm.exe
+
+assembly_info:
+  patch: true
+  file: Properties\AssemblyInfo.cs
+  assembly_version: $(BUILD_VERSION)
+  assembly_file_version: $(BUILD_VERSION_FILE)
+  assembly_informational_version: $(BUILD_VERSION_FRIENDLY)
+
+before_build:
+- nuget restore
+- nfpm install
+
+build:
+  verbosity: minimal
+
+after_build:
+- nfpm pack
+
+artifacts:
+- path: $(APPVEYOR_PROJECT_NAME).zip
+
+deploy:
+  release: $(APPVEYOR_REPO_TAG_NAME)
+  provider: GitHub
+  auth_token:
+    secure: # Put encrypted GitHub token here - https://www.appveyor.com/docs/deployment/github/#provider-settings
+  on:
+    branch: master
+    APPVEYOR_REPO_TAG: true
